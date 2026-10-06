@@ -7,6 +7,11 @@ import 'package:mindset_notes/firebase_options.dart';
 
 import 'core/routes/routes.dart';
 import 'features/notes/cubit/notes_cubit.dart';
+import 'package:mindset_notes/features/notes/domain/use_cases/add_note.dart';
+import 'package:mindset_notes/features/notes/domain/use_cases/delete_note.dart';
+import 'package:mindset_notes/features/notes/domain/use_cases/get_note.dart';
+import 'package:mindset_notes/features/notes/domain/use_cases/get_notes.dart';
+import 'package:mindset_notes/features/notes/domain/use_cases/update_note.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +27,17 @@ class NotesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => NotesCubit(OnlineNotesRepository())..getAllNotes(),
+        create: (_) {
+          final repository = OnlineNotesRepository();
+
+          return NotesCubit(
+            getNotes: GetNotes(repository),
+            getNote: GetNote(repository),
+            addNoteUseCase: AddNote(repository),
+            updateNoteUseCase: UpdateNote(repository),
+            deleteNoteUseCase: DeleteNote(repository),
+          )..getAllNotes();
+        },
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(

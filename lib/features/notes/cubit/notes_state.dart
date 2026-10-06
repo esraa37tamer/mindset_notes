@@ -1,4 +1,4 @@
-import 'package:mindset_notes/features/notes/data/models/online_note.dart';
+import '../domain/entities/note.dart';
 
 class NotesState {
   const NotesState({
@@ -7,12 +7,12 @@ class NotesState {
     this.errorMessage,
   });
 
-  final List<FirebaseNote> notes;
+  final List<Note> notes;
   final bool isLoading;
   final String? errorMessage;
 
   NotesState copyWith({
-    List<FirebaseNote>? notes,
+    List<Note>? notes,
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
@@ -20,7 +20,8 @@ class NotesState {
     return NotesState(
       notes: notes ?? this.notes,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+      errorMessage:
+      clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }

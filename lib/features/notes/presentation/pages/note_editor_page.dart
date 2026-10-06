@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mindset_notes/features/notes/cubit/notes_cubit.dart';
-import 'package:mindset_notes/features/notes/data/models/online_note.dart';
-
-import '../../data/models/note_model.dart';
+import '../../domain/entities/note.dart';
 
 class NoteEditorPage extends StatefulWidget {
   const NoteEditorPage({super.key});
@@ -15,16 +13,20 @@ class NoteEditorPage extends StatefulWidget {
 class _NoteEditorPageState extends State<NoteEditorPage> {
   @override
   Widget build(BuildContext context) {
-    final FirebaseNote? note = ModalRoute.of(context)!.settings.arguments as FirebaseNote?;
+    final Note? note = ModalRoute.of(context)!.settings.arguments as Note?;
 
     return NoteEditor(note: note);
   }
 }
 
 class NoteEditor extends StatefulWidget {
-  const new({super.key, this.note});
+  // const new({super.key, this.note});
+  const NoteEditor({
+    super.key,
+    this.note,
+  });
 
-  final FirebaseNote? note;
+  final Note? note;
 
   @override
   State<NoteEditor> createState() => _NoteEditorState();

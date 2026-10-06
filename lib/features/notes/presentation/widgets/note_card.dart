@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mindset_notes/features/notes/data/models/online_note.dart';
-
+import '../../domain/entities/note.dart';
 class NoteCard extends StatelessWidget {
   const NoteCard({
     super.key,
@@ -9,7 +8,7 @@ class NoteCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  final FirebaseNote note;
+  final Note note;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 

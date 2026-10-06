@@ -2,25 +2,36 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mindset_notes/features/notes/data/models/online_note.dart';
-import 'package:mindset_notes/features/notes/data/repository/notes_repo_interface.dart';
+
+import '../../domain/entities/note.dart';
+import '../../domain/repositories/notes_repository.dart';
+import '../models/online_note.dart';
 
 const noteCollection = 'Notes';
 
 class OnlineNotesRepository implements NotesRepository {
   final db = FirebaseFirestore.instance;
+
   @override
-  Future<void> add({required String title, required String content}) async {
+  Future<void> add({
+    required String title,
+    required String content,
+  }) async {
     final user = FirebaseAuth.instance.currentUser;
+
     if (isUserSignedIn()) {
+      final now = DateTime.now();
+
       final doc = await db.collection(noteCollection).add({
         'title': title,
         'content': content,
         'userId': user!.uid,
-        'createdAt': Timestamp.fromDate(DateTime.now()),
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
+        'createdAt': Timestamp.fromDate(now),
+        'updatedAt': Timestamp.fromDate(now),
       });
+
       final contentAdded = await doc.get();
+
       log(contentAdded.data().toString());
     } else {
       log('unable to add note');
@@ -28,48 +39,88 @@ class OnlineNotesRepository implements NotesRepository {
   }
 
   @override
-  Future<void> delete(String id) async {
-    final doc = await getById(id);
-    await doc?.delete();
-  }
-
-  @override
-  Future<List<FirebaseNote>> getAll() async {
+  Future<List<Note>> getAll() async {
     final user = FirebaseAuth.instance.currentUser;
-    log('user?.uid ${user?.uid} ');
+
+    log('user?.uid ${user?.uid}');
+
     final res = (await db.collection(noteCollection).get()).docs
         .where((element) => element['userId'] == user?.uid)
         .map((e) {
-          final data = {...e.data(), 'id': e.id};
-          return data;
-        })
+      final data = {
+        ...e.data(),
+        'id': e.id,
+      };
+
+      return FirebaseNote.fromJson(data);
+    })
         .toList();
 
-    final firebaseNote = res.map((e) => FirebaseNote.fromJson(e)).toList();
-    log(firebaseNote.length.toString());
+    log(res.length.toString());
 
-    return firebaseNote;
+    // convert data models to domain entities
+    return res.map((firebaseNote) {
+      return Note(
+        id: firebaseNote.id,
+        title: firebaseNote.title,
+        content: firebaseNote.content,
+        createdAt: firebaseNote.createdAt,
+        updatedAt: firebaseNote.updatedAt,
+      );
+    }).toList();
   }
 
   @override
-  Future<DocumentReference<Map<String, dynamic>>>? getById(String id) async {
-    return FirebaseFirestore.instance.collection(noteCollection).doc(id);
+  Future<Note?> getById(String id) async {
+    final doc = await db
+        .collection(noteCollection)
+        .doc(id)
+        .get();
+
+    if (!doc.exists || doc.data() == null) {
+      return null;
+    }
+
+    final data = {
+      ...doc.data()!,
+      'id': doc.id,
+    };
+
+    final firebaseNote = FirebaseNote.fromJson(data);
+
+    return Note(
+      id: firebaseNote.id,
+      title: firebaseNote.title,
+      content: firebaseNote.content,
+      createdAt: firebaseNote.createdAt,
+      updatedAt: firebaseNote.updatedAt,
+    );
   }
 
   @override
-  Future<void> update(FirebaseNote note) async {
-    await FirebaseFirestore.instance
+  Future<void> update(Note note) async {
+    await db
         .collection(noteCollection)
         .doc(note.id)
-        .update(note.toJson());
+        .update({
+      'title': note.title,
+      'content': note.content,
+      'createdAt': Timestamp.fromDate(note.createdAt),
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
+    });
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    await db
+        .collection(noteCollection)
+        .doc(id)
+        .delete();
   }
 
   bool isUserSignedIn() {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return true;
-    }
 
-    return false;
+    return user != null;
   }
 }
